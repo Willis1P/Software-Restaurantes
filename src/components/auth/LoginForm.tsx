@@ -1,16 +1,36 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 const LoginForm = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement login logic
-    toast.success("Login realizado com sucesso!");
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      toast.success("Login realizado com sucesso!");
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Erro no login:', error);
+      toast.error("Erro ao realizar login. Verifique suas credenciais.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,8 +53,8 @@ const LoginForm = () => {
           required
         />
       </div>
-      <Button type="submit" className="w-full">
-        Entrar
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? "Entrando..." : "Entrar"}
       </Button>
     </form>
   );
